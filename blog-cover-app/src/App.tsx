@@ -91,7 +91,7 @@ function App() {
             onGenerate={handleGenerate}
           />
           <div className="tool-row">
-            <span className="seed-hint">输出尺寸已调整为 1200 × 630，下载时自动压缩为高质量 JPG</span>
+            <span className="seed-hint">输出尺寸 1200 × 630，支持 JPG / PNG / WebP 三种格式</span>
           </div>
           <CoverPreview options={currentOptions} renderInfo={renderInfo} onRendered={handleRendered} />
         </div>

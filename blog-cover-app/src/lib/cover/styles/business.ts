@@ -71,23 +71,21 @@ function drawInfoBullets(ctx: CanvasRenderingContext2D, scene: CoverScene) {
 
 function drawMetricCards(ctx: CanvasRenderingContext2D, scene: CoverScene) {
   const { width, height, rng } = scene
-  // 随机位置的指标卡片
-  for (let index = 0; index < rng.int(2, 4); index += 1) {
-    const x = rng.range(width * 0.52, width * 0.76)
-    const y = rng.range(height * 0.44, height * 0.62)
-    const cardW = rng.range(110, 150)
-    const cardH = rng.range(80, 110)
-    ctx.fillStyle = 'rgba(255,255,255,0.08)'
-    ctx.fillRect(x, y, cardW, cardH)
-    ctx.strokeStyle = 'rgba(212, 175, 55, 0.28)'
-    ctx.strokeRect(x, y, cardW, cardH)
-    ctx.fillStyle = 'rgba(248,250,252,0.9)'
-    ctx.font = '700 28px "Microsoft YaHei"'
-    ctx.fillText(`${rng.int(12, 98)}%`, x + 18, y + 42)
-    ctx.fillStyle = 'rgba(226,232,240,0.72)'
-    ctx.font = '500 16px "Microsoft YaHei"'
-    ctx.fillText('KPI', x + 18, y + 72)
-  }
+  // 只画 1 个指标卡片（避免百分数过多）
+  const x = rng.range(width * 0.52, width * 0.76)
+  const y = rng.range(height * 0.44, height * 0.62)
+  const cardW = rng.range(110, 150)
+  const cardH = rng.range(80, 110)
+  ctx.fillStyle = 'rgba(255,255,255,0.08)'
+  ctx.fillRect(x, y, cardW, cardH)
+  ctx.strokeStyle = 'rgba(212, 175, 55, 0.28)'
+  ctx.strokeRect(x, y, cardW, cardH)
+  ctx.fillStyle = 'rgba(248,250,252,0.9)'
+  ctx.font = '700 28px "Microsoft YaHei"'
+  ctx.fillText(`${rng.int(12, 98)}%`, x + 18, y + 42)
+  ctx.fillStyle = 'rgba(226,232,240,0.72)'
+  ctx.font = '500 16px "Microsoft YaHei"'
+  ctx.fillText('KPI', x + 18, y + 72)
 }
 
 function drawArrows(ctx: CanvasRenderingContext2D, scene: CoverScene) {
@@ -302,6 +300,7 @@ function drawRollingNumbers(ctx: CanvasRenderingContext2D, scene: CoverScene) {
   ctx.fillText(`${value}%`, width * 0.78, height * 0.62)
 }
 
+
 // ============================================================
 // 商务风层次化渲染
 // ============================================================
@@ -336,8 +335,9 @@ function renderBusinessBase(ctx: CanvasRenderingContext2D, scene: CoverScene) {
     () => drawInfoBullets(ctx, scene),
     () => drawTimeline(ctx, scene),
     () => drawColumnCards(ctx, scene),
+    () => drawMetricCards(ctx, scene),
   ]
-  const midCount = rng.int(3, 4)
+  const midCount = 3
   const midPicked = new Set<number>()
   while (midPicked.size < midCount) {
     midPicked.add(rng.int(0, midPool.length - 1))

@@ -359,42 +359,131 @@ function drawCreases(ctx: CanvasRenderingContext2D, scene: CoverScene) {
 
 // ============ 动态效果 ============
 
-// 纸张光影呼吸（无咖啡杯版本）
+// 纸张光影呼吸 - 画在角落，不覆盖整个画布
 function drawBreathingPaper(ctx: CanvasRenderingContext2D, scene: CoverScene) {
   const { width, height } = scene
   const time = Date.now() * 0.001
-  const breath = Math.sin(time * 0.8) * 0.03 + 0.97
 
-  const paper = ctx.createLinearGradient(0, 0, width, height)
-  paper.addColorStop(0, `rgba(248, 243, 234, ${breath})`)
-  paper.addColorStop(0.5, `rgba(245, 241, 232, ${breath})`)
-  paper.addColorStop(1, `rgba(233, 223, 209, ${breath})`)
-  ctx.fillStyle = paper
+  // 右上角光晕呼吸
+  const breath = 0.15 + Math.sin(time * 0.8) * 0.1
+  const glow = ctx.createRadialGradient(width * 0.85, height * 0.15, 0, width * 0.85, height * 0.15, width * 0.3)
+  glow.addColorStop(0, `rgba(255, 250, 230, ${breath})`)
+  glow.addColorStop(1, 'rgba(255, 250, 230, 0)')
+  ctx.fillStyle = glow
   ctx.fillRect(0, 0, width, height)
 }
 
-// 便签纸飘动
-function drawFloatingStickyNotes(ctx: CanvasRenderingContext2D, scene: CoverScene) {
-  const { width, height, rng } = scene
+// 打字文字闪烁 - 固定位置，更明显的闪烁
+function drawFlickeringText(ctx: CanvasRenderingContext2D, scene: CoverScene) {
+  const { width, height } = scene
+  const time = Date.now() * 0.001
+  ctx.font = '500 20px "Courier New", monospace'
+
+  const words = ['draft', 'memo', 'story', 'chapter', 'note']
+  const positions = [
+    { x: width * 0.15, y: height * 0.28 },
+    { x: width * 0.55, y: height * 0.45 },
+    { x: width * 0.25, y: height * 0.65 },
+    { x: width * 0.65, y: height * 0.25 },
+  ]
+
+  for (let i = 0; i < 4; i++) {
+    // 更明显的闪烁效果
+    const alpha = 0.4 + Math.sin(time * 3 + i * 1.5) * 0.35
+    ctx.fillStyle = `rgba(64, 38, 31, ${Math.max(0.1, alpha)})`
+    ctx.fillText(words[i], positions[i].x, positions[i].y)
+  }
+}
+
+// 印章脉冲效果 - 更明显
+function drawPulsingStamp(ctx: CanvasRenderingContext2D, scene: CoverScene) {
+  const { width, height } = scene
   const time = Date.now() * 0.001
 
-  for (let index = 0; index < 2; index += 1) {
-    const baseX = rng.range(width * 0.62, width * 0.84)
-    const baseY = rng.range(height * 0.14, height * 0.46)
-    const w = rng.range(110, 160)
-    const h = rng.range(90, 120)
+  // 固定位置，更容易看到
+  ctx.save()
+  ctx.translate(width * 0.18, height * 0.65)
 
-    const floatX = Math.sin(time * 0.8 + index * 1.5) * 4
-    const floatY = Math.cos(time * 0.6 + index * 1.2) * 3
-    const rotation = Math.sin(time * 0.5 + index) * 0.05
+  // 脉冲缩放
+  const pulse = 0.9 + Math.sin(time * 2) * 0.15
+  ctx.scale(pulse, pulse)
+
+  // 光晕效果
+  const glowAlpha = 0.3 + Math.sin(time * 2) * 0.2
+  ctx.fillStyle = `rgba(180, 45, 35, ${glowAlpha})`
+  ctx.beginPath()
+  ctx.arc(0, 0, 50, 0, Math.PI * 2)
+  ctx.fill()
+
+  // 印章主体
+  ctx.fillStyle = 'rgba(180, 45, 35, 0.85)'
+  ctx.beginPath()
+  ctx.arc(0, 0, 35, 0, Math.PI * 2)
+  ctx.fill()
+
+  // 印章边框
+  ctx.strokeStyle = 'rgba(140, 25, 15, 0.9)'
+  ctx.lineWidth = 4
+  ctx.beginPath()
+  ctx.arc(0, 0, 38, 0, Math.PI * 2)
+  ctx.stroke()
+
+  // 内圈
+  ctx.strokeStyle = 'rgba(200, 160, 150, 0.7)'
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.arc(0, 0, 28, 0, Math.PI * 2)
+  ctx.stroke()
+
+  ctx.restore()
+}
+
+// 便签纸飘动 - 固定位置，画在静态便签的上层
+function drawFloatingStickyNotes(ctx: CanvasRenderingContext2D, scene: CoverScene) {
+  const { width, height } = scene
+  const time = Date.now() * 0.001
+
+  // 固定画在右侧偏上位置，更容易看到
+  const positions = [
+    { baseX: width * 0.68, baseY: height * 0.25 },
+    { baseX: width * 0.78, baseY: height * 0.45 },
+  ]
+  const sizes = [
+    { w: 120, h: 100 },
+    { w: 100, h: 85 },
+  ]
+
+  for (let index = 0; index < 2; index += 1) {
+    const { baseX, baseY } = positions[index]
+    const { w, h } = sizes[index]
+
+    // 飘动动画
+    const floatX = Math.sin(time * 1.2 + index * 1.5) * 6
+    const floatY = Math.cos(time * 0.9 + index * 1.2) * 4
+    const rotation = Math.sin(time * 0.7 + index) * 0.08
 
     ctx.save()
     ctx.translate(baseX + floatX, baseY + floatY)
-    ctx.rotate(rng.range(-0.2, 0.2) + rotation)
-    ctx.fillStyle = index % 2 === 0 ? 'rgba(245, 230, 170, 0.82)' : 'rgba(243, 214, 195, 0.84)'
+    ctx.rotate(rotation)
+
+    // 便签主体 - 更高的透明度
+    ctx.fillStyle = index % 2 === 0 ? 'rgba(255, 248, 200, 0.95)' : 'rgba(255, 240, 220, 0.95)'
     ctx.fillRect(0, 0, w, h)
-    ctx.strokeStyle = 'rgba(122, 75, 58, 0.18)'
+
+    // 便签边框 - 更明显
+    ctx.strokeStyle = 'rgba(180, 140, 100, 0.6)'
+    ctx.lineWidth = 2
     ctx.strokeRect(0, 0, w, h)
+
+    // 模拟折角
+    ctx.fillStyle = 'rgba(200, 180, 150, 0.5)'
+    ctx.beginPath()
+    ctx.moveTo(w - 15, 0)
+    ctx.lineTo(w, 0)
+    ctx.lineTo(w, 15)
+    ctx.closePath()
+    ctx.fill()
+
     ctx.restore()
   }
 }
@@ -479,7 +568,7 @@ export function renderArtStyleAnimated(ctx: CanvasRenderingContext2D, scene: Cov
   renderArtBase(ctx, scene)
 
   // ===== Layer 3: 动态层（随机选 1-2 个）=====
-  const dynamicPool = [drawFloatingStickyNotes, drawBreathingPaper]
+  const dynamicPool = [drawFloatingStickyNotes, drawBreathingPaper, drawFlickeringText, drawPulsingStamp]
   const dynamicCount = rng.int(1, 2)
   const pickedDynamics = new Set<number>()
   while (pickedDynamics.size < dynamicCount) {
