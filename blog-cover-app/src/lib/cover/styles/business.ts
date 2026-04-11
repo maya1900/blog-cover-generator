@@ -55,25 +55,32 @@ function drawChartPanel(ctx: CanvasRenderingContext2D, scene: CoverScene) {
 }
 
 function drawInfoBullets(ctx: CanvasRenderingContext2D, scene: CoverScene) {
-  const { width, height } = scene
-  for (let bullet = 0; bullet < 4; bullet += 1) {
-    const y = height * 0.18 + bullet * 46
+  const { width, height, rng } = scene
+  // 随机位置的信息条
+  const baseY = rng.range(height * 0.14, height * 0.24)
+  const baseX = rng.range(width * 0.1, width * 0.18)
+  for (let bullet = 0; bullet < rng.int(3, 5); bullet += 1) {
+    const y = baseY + bullet * rng.range(40, 54)
+    const barWidth = rng.range(width * 0.22, width * 0.32)
     ctx.fillStyle = 'rgba(248, 250, 252, 0.82)'
-    ctx.fillRect(width * 0.14, y, width * 0.26, 8)
+    ctx.fillRect(baseX, y, barWidth, 8)
     ctx.fillStyle = 'rgba(212, 175, 55, 0.9)'
-    ctx.fillRect(width * 0.11, y - 1, 14, 14)
+    ctx.fillRect(baseX - 6, y - 1, 14, 14)
   }
 }
 
 function drawMetricCards(ctx: CanvasRenderingContext2D, scene: CoverScene) {
   const { width, height, rng } = scene
-  for (let index = 0; index < 3; index += 1) {
-    const x = width * 0.56 + index * 150
-    const y = height * 0.52 + (index % 2) * 24
+  // 随机位置的指标卡片
+  for (let index = 0; index < rng.int(2, 4); index += 1) {
+    const x = rng.range(width * 0.52, width * 0.76)
+    const y = rng.range(height * 0.44, height * 0.62)
+    const cardW = rng.range(110, 150)
+    const cardH = rng.range(80, 110)
     ctx.fillStyle = 'rgba(255,255,255,0.08)'
-    ctx.fillRect(x, y, 132, 92)
+    ctx.fillRect(x, y, cardW, cardH)
     ctx.strokeStyle = 'rgba(212, 175, 55, 0.28)'
-    ctx.strokeRect(x, y, 132, 92)
+    ctx.strokeRect(x, y, cardW, cardH)
     ctx.fillStyle = 'rgba(248,250,252,0.9)'
     ctx.font = '700 28px "Microsoft YaHei"'
     ctx.fillText(`${rng.int(12, 98)}%`, x + 18, y + 42)
@@ -105,21 +112,35 @@ function drawArrows(ctx: CanvasRenderingContext2D, scene: CoverScene) {
 }
 
 function drawTimeline(ctx: CanvasRenderingContext2D, scene: CoverScene) {
-  const { width, height } = scene
-  const y = height * 0.8
+  const { width, height, rng } = scene
+  // 随机位置和角度的时间线
+  const y = rng.range(height * 0.68, height * 0.86)
+  const startX = rng.range(width * 0.08, width * 0.16)
+  const endX = rng.range(width * 0.84, width * 0.92)
+  const angle = rng.range(-8, 8) * Math.PI / 180
+  
+  ctx.save()
+  ctx.translate(width / 2, y)
+  ctx.rotate(angle)
+  ctx.translate(-width / 2, -y)
+  
   ctx.strokeStyle = 'rgba(255,255,255,0.18)'
   ctx.lineWidth = 2
   ctx.beginPath()
-  ctx.moveTo(width * 0.12, y)
-  ctx.lineTo(width * 0.88, y)
+  ctx.moveTo(startX, y)
+  ctx.lineTo(endX, y)
   ctx.stroke()
-  for (let i = 0; i < 5; i += 1) {
-    const x = width * 0.18 + i * width * 0.14
+  
+  const nodeCount = rng.int(4, 6)
+  for (let i = 0; i < nodeCount; i += 1) {
+    const x = startX + (endX - startX) * i / (nodeCount - 1)
     ctx.fillStyle = 'rgba(212, 175, 55, 0.9)'
     ctx.beginPath()
     ctx.arc(x, y, 7, 0, Math.PI * 2)
     ctx.fill()
   }
+  
+  ctx.restore()
 }
 
 function drawColumnCards(ctx: CanvasRenderingContext2D, scene: CoverScene) {
@@ -217,9 +238,78 @@ function drawSectionBlocks(ctx: CanvasRenderingContext2D, scene: CoverScene) {
   })
 }
 
-export function renderBusinessStyle(ctx: CanvasRenderingContext2D, scene: CoverScene) {
+// ============ 动态效果 ============
+
+// 数据闪烁光点
+function drawBlinkingDataPoints(ctx: CanvasRenderingContext2D, scene: CoverScene) {
+  const { width, height } = scene
+  const time = Date.now() * 0.001
+
+  for (let i = 0; i < 8; i += 1) {
+    const x = width * (0.1 + i * 0.1)
+    const y = height * 0.3 + Math.sin(time * 2 + i) * 20
+    const alpha = 0.3 + Math.sin(time * 3 + i * 0.5) * 0.25
+    ctx.fillStyle = `rgba(212, 175, 55, ${alpha})`
+    ctx.beginPath()
+    ctx.arc(x, y, 3, 0, Math.PI * 2)
+    ctx.fill()
+  }
+}
+
+// 进度条动画
+function drawAnimatedProgress(ctx: CanvasRenderingContext2D, scene: CoverScene) {
+  const { width, height } = scene
+  const time = Date.now() * 0.001
+  const progress = (Math.sin(time * 0.5) + 1) / 2 * 0.8 + 0.1
+
+  const x = width * 0.12
+  const y = height * 0.72
+  const w = width * 0.76
+  const h = 8
+
+  ctx.fillStyle = 'rgba(255,255,255,0.08)'
+  ctx.fillRect(x, y, w, h)
+
+  const gradient = ctx.createLinearGradient(x, y, x + w * progress, y)
+  gradient.addColorStop(0, 'rgba(212, 175, 55, 0.8)')
+  gradient.addColorStop(1, 'rgba(212, 175, 55, 0.4)')
+  ctx.fillStyle = gradient
+  ctx.fillRect(x, y, w * progress, h)
+}
+
+// 扫描线效果
+function drawBusinessScanLine(ctx: CanvasRenderingContext2D, scene: CoverScene) {
+  const { width, height } = scene
+  const time = Date.now() * 0.002
+
+  const scanY = (time % (height * 1.2)) - height * 0.1
+  const scanGradient = ctx.createLinearGradient(0, scanY - 30, 0, scanY + 30)
+  scanGradient.addColorStop(0, 'rgba(212, 175, 55, 0)')
+  scanGradient.addColorStop(0.5, 'rgba(212, 175, 55, 0.08)')
+  scanGradient.addColorStop(1, 'rgba(212, 175, 55, 0)')
+  ctx.fillStyle = scanGradient
+  ctx.fillRect(0, scanY - 30, width, 60)
+}
+
+// 数字滚动效果
+function drawRollingNumbers(ctx: CanvasRenderingContext2D, scene: CoverScene) {
+  const { width, height } = scene
+  const time = Date.now() * 0.001
+
+  ctx.fillStyle = 'rgba(212, 175, 55, 0.6)'
+  ctx.font = '700 24px "Microsoft YaHei"'
+  const value = Math.floor(Math.abs(Math.sin(time * 0.8) * 100))
+  ctx.fillText(`${value}%`, width * 0.78, height * 0.62)
+}
+
+// ============================================================
+// 商务风层次化渲染
+// ============================================================
+
+function renderBusinessBase(ctx: CanvasRenderingContext2D, scene: CoverScene) {
   const { width, height, rng, theme } = scene
 
+  // ===== Layer 0: 背景层 =====
   const bg = ctx.createLinearGradient(0, 0, width, height)
   bg.addColorStop(0, theme.palette[0])
   bg.addColorStop(0.5, theme.palette[1])
@@ -227,6 +317,7 @@ export function renderBusinessStyle(ctx: CanvasRenderingContext2D, scene: CoverS
   ctx.fillStyle = bg
   ctx.fillRect(0, 0, width, height)
 
+  // 背景网格线
   ctx.strokeStyle = 'rgba(255,255,255,0.06)'
   for (let x = 0; x < width; x += 90) {
     ctx.beginPath()
@@ -235,27 +326,57 @@ export function renderBusinessStyle(ctx: CanvasRenderingContext2D, scene: CoverS
     ctx.stroke()
   }
 
+  // ===== Layer 1: 中景层 =====
   drawDividers(ctx, scene)
   drawSectionBlocks(ctx, scene)
 
-  const pool = [
+  const midPool = [
     () => drawSkyline(ctx, scene),
     () => drawChartPanel(ctx, scene),
     () => drawInfoBullets(ctx, scene),
-    () => drawMetricCards(ctx, scene),
-    () => drawArrows(ctx, scene),
     () => drawTimeline(ctx, scene),
     () => drawColumnCards(ctx, scene),
+  ]
+  const midCount = rng.int(3, 4)
+  const midPicked = new Set<number>()
+  while (midPicked.size < midCount) {
+    midPicked.add(rng.int(0, midPool.length - 1))
+  }
+  Array.from(midPicked).forEach((i) => midPool[i]?.())
+
+  // ===== Layer 2: 点缀层 =====
+  const accentPool = [
+    () => drawMetricCards(ctx, scene),
+    () => drawArrows(ctx, scene),
     () => drawTargetFocus(ctx, scene),
     () => drawTableLines(ctx, scene),
     () => drawCornerTitleTags(ctx, scene),
   ]
-
-  const count = rng.int(4, 6)
-  const picked = new Set<number>()
-  while (picked.size < count) {
-    picked.add(rng.int(0, pool.length - 1))
+  const accentCount = rng.int(2, 3)
+  const accentPicked = new Set<number>()
+  while (accentPicked.size < accentCount) {
+    accentPicked.add(rng.int(0, accentPool.length - 1))
   }
+  Array.from(accentPicked).forEach((i) => accentPool[i]?.())
+}
 
-  Array.from(picked).forEach((index) => pool[index]?.())
+// 静态渲染（用于下载）
+export function renderBusinessStyle(ctx: CanvasRenderingContext2D, scene: CoverScene) {
+  renderBusinessBase(ctx, scene)
+}
+
+// 动态渲染（用于预览）
+export function renderBusinessStyleAnimated(ctx: CanvasRenderingContext2D, scene: CoverScene) {
+  const { rng } = scene
+
+  renderBusinessBase(ctx, scene)
+
+  // ===== Layer 3: 动态层（随机选 1-2 个）=====
+  const dynamicPool = [drawBlinkingDataPoints, drawAnimatedProgress, drawBusinessScanLine, drawRollingNumbers]
+  const dynamicCount = rng.int(1, 2)
+  const pickedDynamics = new Set<number>()
+  while (pickedDynamics.size < dynamicCount) {
+    pickedDynamics.add(rng.int(0, dynamicPool.length - 1))
+  }
+  Array.from(pickedDynamics).forEach((i) => dynamicPool[i]?.(ctx, scene))
 }

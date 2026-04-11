@@ -26,8 +26,11 @@ export function HistoryPanel({ items, onReplay, onClear }: HistoryPanelProps) {
         <div className="history-list">
           {items.map((item, index) => (
             <button key={item.id} type="button" className="history-item" onClick={() => onReplay(item)}>
-              <span className="history-item__style">{THEMES[item.style].label} · 第 {items.length - index} 版</span>
+              <span className="history-item__style">
+                {THEMES[item.style].label} · 第 {item.variant ?? items.length - index} 版
+              </span>
               <strong>{item.title}</strong>
+              <span className="history-item__meta">Seed {item.seed}</span>
               <span>{new Date(item.createdAt).toLocaleString()}</span>
             </button>
           ))}

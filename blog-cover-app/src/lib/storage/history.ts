@@ -8,6 +8,7 @@ interface SaveHistoryInput {
   title: string
   style: CoverStyle
   seed: number
+  variant?: number
 }
 
 export function readHistory(): CoverHistoryItem[] {
@@ -28,6 +29,7 @@ export function saveHistory(input: SaveHistoryInput): CoverHistoryItem[] {
     title: input.title,
     style: input.style,
     seed: input.seed,
+    variant: input.variant,
     createdAt: new Date().toISOString(),
   }
 

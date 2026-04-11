@@ -1,11 +1,34 @@
-import type { CoverStyle, CoverTheme } from './types'
+import type { CoverStyle, CoverTheme, TitleFontPreset } from './types'
 
 export const COVER_SIZE = {
-  width: 1600,
-  height: 900,
+  width: 1200,
+  height: 630,
 } as const
 
 const YAHEI_STACK = '"Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", sans-serif'
+
+export const TITLE_FONT_PRESETS: Record<TitleFontPreset, { label: string; fontStack: string }> = {
+  yahei: {
+    label: '雅黑',
+    fontStack: '"Microsoft YaHei", "PingFang SC", sans-serif',
+  },
+  songti: {
+    label: '宋体',
+    fontStack: '"Songti SC", "STSong", serif',
+  },
+  kaiti: {
+    label: '楷体',
+    fontStack: '"Kaiti SC", "STKaiti", serif',
+  },
+  hei: {
+    label: '黑体',
+    fontStack: '"PingFang SC", "Heiti SC", sans-serif',
+  },
+  serif: {
+    label: '衬线',
+    fontStack: '"Noto Serif SC", "Songti SC", serif',
+  },
+}
 
 export const THEMES: Record<CoverStyle, CoverTheme> = {
   tech: {

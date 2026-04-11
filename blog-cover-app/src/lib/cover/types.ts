@@ -1,5 +1,7 @@
 export type CoverStyle = 'tech' | 'art' | 'business' | 'nature'
 
+export type TitleFontPreset = 'yahei' | 'songti' | 'kaiti' | 'hei' | 'serif'
+
 export interface CoverTheme {
   id: CoverStyle
   label: string
@@ -16,6 +18,15 @@ export interface CoverOptions {
   height?: number
   variant?: number
   seedOverride?: number
+  titleFont?: TitleFontPreset
+  titleScale?: number
+}
+
+export interface RenderResult {
+  seed: number
+  width: number
+  height: number
+  variant: number
 }
 
 export interface CoverScene {
@@ -24,6 +35,7 @@ export interface CoverScene {
   seed: number
   rng: SeededRandom
   theme: CoverTheme
+  time?: number // 用于动态效果的当前时间戳（秒）
 }
 
 export interface CoverHistoryItem {
@@ -31,6 +43,7 @@ export interface CoverHistoryItem {
   title: string
   style: CoverStyle
   seed: number
+  variant?: number
   createdAt: string
 }
 
@@ -38,6 +51,8 @@ export interface StyleRecommendation {
   style: CoverStyle
   score: number
   matchedKeywords: string[]
+  reasons: string[]
+  confidence: 'high' | 'medium' | 'low'
 }
 
 export interface SeededRandom {
