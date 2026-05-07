@@ -1,6 +1,8 @@
-# Blog Cover App
+# Blog Cover Generator
 
 一个基于 **Vite + React + TypeScript** 的博客头图生成器，面向博客、公众号、知识卡片和内容分发场景，直接在浏览器里生成 `1200 × 630` 的静态封面图。
+
+![screenshot](public/screenshot.png)
 
 项目核心目标很直接：
 
@@ -141,14 +143,13 @@ style + title + variant
 ## 项目结构
 
 ```text
-blog-cover-app/
-  src/
-    components/         React 组件
-    lib/cover/          Canvas 渲染引擎、seed、布局、主题与导出
-    lib/recommendation/ 标题关键词风格推荐
-    lib/storage/        历史记录读写
-    test/               测试初始化与测试文件
-  public/               静态资源
+src/
+  components/         React 组件
+  lib/cover/          Canvas 渲染引擎、seed、布局、主题与导出
+  lib/recommendation/ 标题关键词风格推荐
+  lib/storage/        历史记录读写
+  test/               测试初始化与测试文件
+public/               静态资源
 ```
 
 ## 当前交互重点
@@ -170,4 +171,3 @@ blog-cover-app/
 
 - 当前项目是纯前端本地生成方案，不依赖后端服务
 - 浏览器对剪贴板图片写入能力存在兼容性差异；不支持时可直接下载图片
-- 仓库根目录在上一级 `blog-cover-generator/`，当前应用代码集中在 `blog-cover-app/`
