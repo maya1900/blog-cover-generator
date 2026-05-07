@@ -43,7 +43,7 @@ export function TitleForm({
         <div>
           <p className="eyebrow">Blog Cover Generator</p>
           <h1>博客头图生成器</h1>
-          <p className="panel__lead">四种风格、随机元素组合、更强标题排版。输入标题后每次点击都会生成一版新的头图。---by 羊的小栈</p>
+          <p className="panel__lead">四种风格、随机元素组合、更强标题排版。可直接生成纯背景头图，也可输入标题生成带字版本。---by 羊的小栈</p>
         </div>
       </div>
 
@@ -52,7 +52,7 @@ export function TitleForm({
         <textarea
           value={title}
           rows={3}
-          placeholder="比如：为什么 AI Agent 正在重塑软件工程"
+          placeholder="比如：为什么 AI Agent 正在重塑软件工程；留空则生成无标题头图"
           onChange={(event) => onTitleChange(event.target.value)}
         />
       </label>
@@ -132,7 +132,6 @@ export function TitleForm({
           setTimeout(() => ripple.remove(), 600)
           onGenerate()
         }}
-        disabled={!title.trim()}
       >
         生成头图
       </button>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
-import { exportCanvasAsPng, renderCoverToCanvas, renderCoverToCanvasAnimated } from '../lib/cover/renderCover'
+import { createCompressedCanvasImageBlob, exportCanvasAsImage, renderCoverToCanvas } from '../lib/cover/renderCover'
 import { THEMES, TITLE_FONT_PRESETS } from '../lib/cover/themes'
 import type { CoverOptions, RenderResult } from '../lib/cover/types'
 
@@ -10,41 +10,52 @@ interface CoverPreviewProps {
 }
 
 const PREVIEW_SCALE = 0.58
+const COPY_IMAGE_MAX_BYTES = 150 * 1024
 
 export type ExportFormat = 'jpg' | 'png' | 'webp'
 
 export function CoverPreview({ options, renderInfo, onRendered }: CoverPreviewProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
-  const animationRef = useRef<number | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
-  const [showAnimation, setShowAnimation] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
-  const [exportFormat, setExportFormat] = useState<ExportFormat>('webp')
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copying' | 'copied' | 'error'>('idle')
+  const [copyMessage, setCopyMessage] = useState('')
+  const [exportFormat, setExportFormat] = useState<ExportFormat>('png')
   const prevOptionsRef = useRef<CoverOptions | null>(null)
+  const renderTimeoutRef = useRef<number | null>(null)
+  const copyResetTimeoutRef = useRef<number | null>(null)
+  const canCopyImage = typeof navigator !== 'undefined' && Boolean(navigator.clipboard?.write) && typeof window !== 'undefined' && 'ClipboardItem' in window
 
-  // 动态预览循环（所有风格）
+  const resetCopyStatusLater = () => {
+    if (copyResetTimeoutRef.current) {
+      window.clearTimeout(copyResetTimeoutRef.current)
+    }
+    copyResetTimeoutRef.current = window.setTimeout(() => {
+      setCopyStatus('idle')
+      setCopyMessage('')
+      copyResetTimeoutRef.current = null
+    }, 1800)
+  }
+
   useEffect(() => {
-    if (!options || !canvasRef.current) {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current)
-        animationRef.current = null
-      }
-      return
-    }
-
-    const animate = () => {
-      if (canvasRef.current) {
-        renderCoverToCanvasAnimated(canvasRef.current, options)
-      }
-      animationRef.current = requestAnimationFrame(animate)
-    }
-    animate()
-
     return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current)
-        animationRef.current = null
+      if (renderTimeoutRef.current) {
+        window.clearTimeout(renderTimeoutRef.current)
+        renderTimeoutRef.current = null
       }
+      if (copyResetTimeoutRef.current) {
+        window.clearTimeout(copyResetTimeoutRef.current)
+        copyResetTimeoutRef.current = null
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    setCopyStatus('idle')
+    setCopyMessage('')
+    if (copyResetTimeoutRef.current) {
+      window.clearTimeout(copyResetTimeoutRef.current)
+      copyResetTimeoutRef.current = null
     }
   }, [options])
 
@@ -57,21 +68,31 @@ export function CoverPreview({ options, renderInfo, onRendered }: CoverPreviewPr
     const isNewGenerate = prevOptionsRef.current?.title !== options.title ||
                           prevOptionsRef.current?.variant !== options.variant
 
-    if (isNewGenerate) {
-      setShowAnimation(false)
-      setIsGenerating(true)
+    if (renderTimeoutRef.current) {
+      window.clearTimeout(renderTimeoutRef.current)
+      renderTimeoutRef.current = null
     }
 
     prevOptionsRef.current = options
 
     const result = renderCoverToCanvas(canvasRef.current, options)
 
-    // 渲染完成后触发动画
-    setTimeout(() => {
+    if (isNewGenerate) {
+      setIsGenerating(true)
+    }
+
+    renderTimeoutRef.current = window.setTimeout(() => {
       setIsGenerating(false)
-      setShowAnimation(true)
       onRendered(result)
+      renderTimeoutRef.current = null
     }, isNewGenerate ? 100 : 0)
+
+    return () => {
+      if (renderTimeoutRef.current) {
+        window.clearTimeout(renderTimeoutRef.current)
+        renderTimeoutRef.current = null
+      }
+    }
   }, [options, onRendered])
 
   const handleDownload = async () => {
@@ -81,12 +102,54 @@ export function CoverPreview({ options, renderInfo, onRendered }: CoverPreviewPr
 
     setIsDownloading(true)
 
-    // 创建新的 canvas 用于下载，避免与预览 canvas 冲突
-    const exportCanvas = document.createElement('canvas')
-    renderCoverToCanvas(exportCanvas, options)
-    const fileName = `${THEMES[options.style].label}-${options.title.slice(0, 12) || 'cover'}`
-    await exportCanvasAsPng(exportCanvas, `${fileName}.${exportFormat}`)
-    setIsDownloading(false)
+    const fileName = `${THEMES[options.style].label}-${options.title.slice(0, 12) || 'untitled-cover'}`
+
+    try {
+      const exportCanvas = document.createElement('canvas')
+      renderCoverToCanvas(exportCanvas, options)
+      await exportCanvasAsImage(exportCanvas, `${fileName}.${exportFormat}`)
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
+  const handleCopyPreview = async () => {
+    if (!canvasRef.current || !options || !canCopyImage) {
+      return
+    }
+
+    try {
+      setCopyStatus('copying')
+      setCopyMessage('正在压缩并复制 PNG 图片...')
+      const exportCanvas = document.createElement('canvas')
+      renderCoverToCanvas(exportCanvas, options)
+      const blob = await createCompressedCanvasImageBlob(exportCanvas, {
+        maxBytes: COPY_IMAGE_MAX_BYTES,
+        format: 'image/png',
+      })
+      if (!blob) {
+        throw new Error('preview export blob unavailable')
+      }
+
+      await navigator.clipboard.write([
+        new window.ClipboardItem({
+          [blob.type]: blob,
+        }),
+      ])
+
+      setCopyStatus('copied')
+      setCopyMessage(`已复制 PNG，约 ${Math.max(1, Math.round(blob.size / 1024))} KB`)
+    } catch (error) {
+      setCopyStatus('error')
+      const message = error instanceof Error ? error.message.toLowerCase() : ''
+      if (!canCopyImage || message.includes('clipboard') || message.includes('notallowed')) {
+        setCopyMessage('当前浏览器不支持复制图片，请改用下载')
+      } else {
+        setCopyMessage('复制失败，请重试；不行就先下载')
+      }
+    } finally {
+      resetCopyStatusLater()
+    }
   }
 
   return (
@@ -123,6 +186,14 @@ export function CoverPreview({ options, renderInfo, onRendered }: CoverPreviewPr
           </div>
           <button
             type="button"
+            className={`secondary-button copy-button copy-button--${copyStatus}`}
+            onClick={handleCopyPreview}
+            disabled={!options || isGenerating || copyStatus === 'copying' || !canCopyImage}
+          >
+            {copyStatus === 'copying' ? '复制中...' : copyStatus === 'copied' ? '已复制' : copyStatus === 'error' ? '复制失败' : '复制图片'}
+          </button>
+          <button
+            type="button"
             className={`secondary-button ${isDownloading ? 'is-loading' : ''}`}
             onClick={handleDownload}
             disabled={!options || isDownloading}
@@ -131,6 +202,13 @@ export function CoverPreview({ options, renderInfo, onRendered }: CoverPreviewPr
             <span className="button-loader" />
           </button>
         </div>
+        <p className={`copy-feedback copy-feedback--${copyStatus}`} aria-live="polite">
+          {copyStatus === 'idle'
+            ? canCopyImage
+              ? '复制时会自动压缩，尽量控制在 150KB 内'
+              : '当前浏览器不支持直接复制图片，请使用下载'
+            : copyMessage}
+        </p>
       </div>
 
       {renderInfo ? (
@@ -166,15 +244,14 @@ export function CoverPreview({ options, renderInfo, onRendered }: CoverPreviewPr
         )}
 
         {/* 空状态 */}
-        {!options && !isGenerating && <div className="canvas-empty">输入标题并点击生成头图</div>}
+        {!options && !isGenerating && <div className="canvas-empty">可直接生成头图，也可以输入标题后再生成</div>}
 
         {/* Canvas 画布 */}
         <canvas
           ref={canvasRef}
-          className={`canvas-result ${options ? 'is-visible' : ''} ${showAnimation ? 'animate-in' : ''}`}
+          className={`canvas-result ${options ? 'is-visible' : ''}`}
         />
 
-        {/* 生成动画遮罩 */}
         {isGenerating && renderInfo && (
           <div className="canvas-generating-overlay">
             <div className="generating-spinner">

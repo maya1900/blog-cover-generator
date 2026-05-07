@@ -35,7 +35,6 @@ export interface CoverScene {
   seed: number
   rng: SeededRandom
   theme: CoverTheme
-  time?: number // 用于动态效果的当前时间戳（秒）
 }
 
 export interface CoverHistoryItem {

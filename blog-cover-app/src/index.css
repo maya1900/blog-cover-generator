@@ -953,7 +953,42 @@ input[type='range']::-moz-range-thumb {
 .export-controls {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
+}
+
+.copy-button {
+  min-width: 96px;
+}
+
+.copy-button--copied {
+  background: rgba(52, 211, 153, 0.16);
+  border-color: rgba(52, 211, 153, 0.42);
+  color: #bbf7d0;
+}
+
+.copy-button--error {
+  background: rgba(248, 113, 113, 0.14);
+  border-color: rgba(248, 113, 113, 0.36);
+  color: #fecaca;
+}
+
+.copy-feedback {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: rgba(226, 232, 240, 0.66);
+}
+
+.copy-feedback--copying {
+  color: #7dd3fc;
+}
+
+.copy-feedback--copied {
+  color: #86efac;
+}
+
+.copy-feedback--error {
+  color: #fca5a5;
 }
 
 .format-selector {
@@ -992,23 +1027,6 @@ input[type='range']::-moz-range-thumb {
 
 .format-btn:last-child {
   border-radius: 0 999px 999px 0;
-}
-
-/* WebP 动图徽章提示 */
-.format-btn[data-format="webp"]::after {
-  content: '';
-  display: inline-block;
-  margin-left: 4px;
-  width: 6px;
-  height: 6px;
-  background: #34d399;
-  border-radius: 50%;
-  animation: badgePulse 1.5s ease-in-out infinite;
-}
-
-@keyframes badgePulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(0.8); }
 }
 
 @media (max-width: 1100px) {
@@ -1058,5 +1076,20 @@ input[type='range']::-moz-range-thumb {
 
   .primary-button--compact {
     width: 100%;
+  }
+
+  .export-controls {
+    align-items: stretch;
+  }
+
+  .format-selector,
+  .copy-button,
+  .export-controls > .secondary-button:last-child {
+    width: 100%;
+  }
+
+  .copy-button,
+  .export-controls > .secondary-button:last-child {
+    justify-content: center;
   }
 }

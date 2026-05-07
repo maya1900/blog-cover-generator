@@ -236,71 +236,6 @@ function drawSectionBlocks(ctx: CanvasRenderingContext2D, scene: CoverScene) {
   })
 }
 
-// ============ 动态效果 ============
-
-// 数据闪烁光点
-function drawBlinkingDataPoints(ctx: CanvasRenderingContext2D, scene: CoverScene) {
-  const { width, height } = scene
-  const time = Date.now() * 0.001
-
-  for (let i = 0; i < 8; i += 1) {
-    const x = width * (0.1 + i * 0.1)
-    const y = height * 0.3 + Math.sin(time * 2 + i) * 20
-    const alpha = 0.3 + Math.sin(time * 3 + i * 0.5) * 0.25
-    ctx.fillStyle = `rgba(212, 175, 55, ${alpha})`
-    ctx.beginPath()
-    ctx.arc(x, y, 3, 0, Math.PI * 2)
-    ctx.fill()
-  }
-}
-
-// 进度条动画
-function drawAnimatedProgress(ctx: CanvasRenderingContext2D, scene: CoverScene) {
-  const { width, height } = scene
-  const time = Date.now() * 0.001
-  const progress = (Math.sin(time * 0.5) + 1) / 2 * 0.8 + 0.1
-
-  const x = width * 0.12
-  const y = height * 0.72
-  const w = width * 0.76
-  const h = 8
-
-  ctx.fillStyle = 'rgba(255,255,255,0.08)'
-  ctx.fillRect(x, y, w, h)
-
-  const gradient = ctx.createLinearGradient(x, y, x + w * progress, y)
-  gradient.addColorStop(0, 'rgba(212, 175, 55, 0.8)')
-  gradient.addColorStop(1, 'rgba(212, 175, 55, 0.4)')
-  ctx.fillStyle = gradient
-  ctx.fillRect(x, y, w * progress, h)
-}
-
-// 扫描线效果
-function drawBusinessScanLine(ctx: CanvasRenderingContext2D, scene: CoverScene) {
-  const { width, height } = scene
-  const time = Date.now() * 0.002
-
-  const scanY = (time % (height * 1.2)) - height * 0.1
-  const scanGradient = ctx.createLinearGradient(0, scanY - 30, 0, scanY + 30)
-  scanGradient.addColorStop(0, 'rgba(212, 175, 55, 0)')
-  scanGradient.addColorStop(0.5, 'rgba(212, 175, 55, 0.08)')
-  scanGradient.addColorStop(1, 'rgba(212, 175, 55, 0)')
-  ctx.fillStyle = scanGradient
-  ctx.fillRect(0, scanY - 30, width, 60)
-}
-
-// 数字滚动效果
-function drawRollingNumbers(ctx: CanvasRenderingContext2D, scene: CoverScene) {
-  const { width, height } = scene
-  const time = Date.now() * 0.001
-
-  ctx.fillStyle = 'rgba(212, 175, 55, 0.6)'
-  ctx.font = '700 24px "Microsoft YaHei"'
-  const value = Math.floor(Math.abs(Math.sin(time * 0.8) * 100))
-  ctx.fillText(`${value}%`, width * 0.78, height * 0.62)
-}
-
-
 // ============================================================
 // 商务风层次化渲染
 // ============================================================
@@ -363,20 +298,4 @@ function renderBusinessBase(ctx: CanvasRenderingContext2D, scene: CoverScene) {
 // 静态渲染（用于下载）
 export function renderBusinessStyle(ctx: CanvasRenderingContext2D, scene: CoverScene) {
   renderBusinessBase(ctx, scene)
-}
-
-// 动态渲染（用于预览）
-export function renderBusinessStyleAnimated(ctx: CanvasRenderingContext2D, scene: CoverScene) {
-  const { rng } = scene
-
-  renderBusinessBase(ctx, scene)
-
-  // ===== Layer 3: 动态层（随机选 1-2 个）=====
-  const dynamicPool = [drawBlinkingDataPoints, drawAnimatedProgress, drawBusinessScanLine, drawRollingNumbers]
-  const dynamicCount = rng.int(1, 2)
-  const pickedDynamics = new Set<number>()
-  while (pickedDynamics.size < dynamicCount) {
-    pickedDynamics.add(rng.int(0, dynamicPool.length - 1))
-  }
-  Array.from(pickedDynamics).forEach((i) => dynamicPool[i]?.(ctx, scene))
 }

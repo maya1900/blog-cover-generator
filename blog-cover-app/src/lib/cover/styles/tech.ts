@@ -297,149 +297,8 @@ function drawDataBands(ctx: CanvasRenderingContext2D, scene: CoverScene) {
   }
 }
 
-// ============================================================
-// 层次化设计：动态层 (Layer 3) - 带动画效果
-// ============================================================
-
-function drawFlowingLines(ctx: CanvasRenderingContext2D, scene: CoverScene) {
-  const { width, height } = scene
-  const time = Date.now() * 0.0003
-
-  for (let i = 0; i < 8; i += 1) {
-    const progress = ((time + i * 0.125) % 1)
-    const startX = -width * 0.3 + progress * width * 1.6
-    const startY = -height * 0.1 + (i % 3) * height * 0.35
-
-    const gradient = ctx.createLinearGradient(startX, startY, startX + width * 0.4, startY + height * 0.8)
-    gradient.addColorStop(0, 'rgba(14, 165, 233, 0)')
-    gradient.addColorStop(0.4 + Math.sin(progress * Math.PI) * 0.2, `rgba(103, 232, 249, ${0.25 + Math.sin(progress * Math.PI) * 0.15})`)
-    gradient.addColorStop(0.6 + Math.cos(progress * Math.PI) * 0.2, 'rgba(139, 92, 246, 0.2)')
-    gradient.addColorStop(1, 'rgba(14, 165, 233, 0)')
-
-    ctx.fillStyle = gradient
-    ctx.beginPath()
-    ctx.moveTo(startX, startY)
-    ctx.lineTo(startX + width * 0.15, startY)
-    ctx.lineTo(startX + width * 0.35, startY + height * 0.8)
-    ctx.lineTo(startX + width * 0.2, startY + height * 0.8)
-    ctx.closePath()
-    ctx.fill()
-  }
-}
-
-function drawBreathingParticles(ctx: CanvasRenderingContext2D, scene: CoverScene) {
-  const { width, height } = scene
-  const time = Date.now() * 0.001
-  const count = 80
-
-  for (let i = 0; i < count; i += 1) {
-    const baseX = (i * 137.5) % width
-    const baseY = (i * 97.3 + Math.sin(i) * 50) % height
-    const size = 1.5 + (i % 3) * 0.8
-
-    const breathPhase = (time * 0.8 + i * 0.3) % (Math.PI * 2)
-    const alpha = 0.3 + Math.sin(breathPhase) * 0.25
-    const floatY = Math.sin(breathPhase * 0.7 + i) * 3
-
-    const colorIndex = i % 3
-    ctx.fillStyle = colorIndex === 0 ? `rgba(103, 232, 249, ${alpha})` : colorIndex === 1 ? `rgba(14, 165, 233, ${alpha * 0.9})` : `rgba(139, 92, 246, ${alpha * 0.85})`
-
-    ctx.beginPath()
-    ctx.arc(baseX, baseY + floatY, size, 0, Math.PI * 2)
-    ctx.fill()
-
-    // 连接线
-    for (let j = i + 1; j < Math.min(i + 4, count); j += 1) {
-      const otherX = (j * 137.5) % width
-      const otherY = (j * 97.3 + Math.sin(j) * 50) % height
-      const dist = Math.hypot(baseX - otherX, baseY + floatY - otherY)
-      if (dist < 80) {
-        ctx.strokeStyle = `rgba(103, 232, 249, ${0.06 * (1 - dist / 80) * (0.5 + Math.sin(breathPhase) * 0.5)})`
-        ctx.lineWidth = 0.8
-        ctx.beginPath()
-        ctx.moveTo(baseX, baseY + floatY)
-        ctx.lineTo(otherX, otherY)
-        ctx.stroke()
-      }
-    }
-  }
-}
-
-function drawAnimatedScanLines(ctx: CanvasRenderingContext2D, scene: CoverScene) {
-  const { width, height } = scene
-  const time = Date.now() * 0.002
-  const scanY = (time % (height * 1.2)) - height * 0.1
-
-  const scanGradient = ctx.createLinearGradient(0, scanY - 50, 0, scanY + 50)
-  scanGradient.addColorStop(0, 'rgba(103, 232, 249, 0)')
-  scanGradient.addColorStop(0.5, 'rgba(103, 232, 249, 0.08)')
-  scanGradient.addColorStop(1, 'rgba(103, 232, 249, 0)')
-  ctx.fillStyle = scanGradient
-  ctx.fillRect(0, scanY - 50, width, 100)
-}
-
-function drawMatrixRain(ctx: CanvasRenderingContext2D, scene: CoverScene) {
-  const { width, height, rng } = scene
-  const columns = Math.floor(width / 18)
-  const chars = '01アイウエオカキクケコ'
-  const time = Date.now() * 0.001
-
-  for (let col = 0; col < columns; col += 1) {
-    const x = col * 18 + 8
-    const speed = rng.range(0.5, 1.5)
-    const offset = (time * speed * 60 + col * 47) % (height + 200)
-    const y = -100 + offset
-
-    if (y < -20 || y > height) continue
-
-    ctx.fillStyle = 'rgba(103, 232, 249, 0.7)'
-    ctx.font = '14px monospace'
-    ctx.fillText(chars[col % chars.length], x, y)
-
-    for (let tail = 1; tail < 8; tail += 1) {
-      const tailY = y - tail * 20
-      if (tailY < 0) break
-      ctx.fillStyle = `rgba(14, 165, 233, ${0.3 - tail * 0.035})`
-      ctx.fillText(chars[(col + tail) % chars.length], x, tailY)
-    }
-  }
-}
-
-function drawHexGrid(ctx: CanvasRenderingContext2D, scene: CoverScene) {
-  const { width, height, rng } = scene
-  const time = Date.now() * 0.001
-  const size = rng.int(24, 38)
-  const rowHeight = size * 1.75
-  const offsetX = rng.range(width * 0.45, width * 0.65)
-
-  for (let row = 0; row < 7; row += 1) {
-    for (let col = 0; col < 14; col += 1) {
-      const x = offsetX + col * (size * 1.8) + (row % 2 === 0 ? 0 : size * 0.9)
-      const y = height * 0.08 + row * rowHeight
-
-      if (x > width * 0.98 || y > height * 0.68) continue
-
-      const pulse = Math.sin(time * 1.5 + col * 0.3 + row * 0.5) * 0.5 + 0.5
-      ctx.strokeStyle = `rgba(125, 211, 252, ${0.05 + pulse * 0.1})`
-      ctx.lineWidth = 1
-
-      ctx.beginPath()
-      for (let side = 0; side < 6; side += 1) {
-        const angle = (Math.PI / 3) * side + Math.PI / 6
-        const px = x + Math.cos(angle) * size
-        const py = y + Math.sin(angle) * size
-        if (side === 0) ctx.moveTo(px, py)
-        else ctx.lineTo(px, py)
-      }
-      ctx.closePath()
-      ctx.stroke()
-    }
-  }
-}
-
 function drawCornerFrames(ctx: CanvasRenderingContext2D, scene: CoverScene) {
   const { width, height, rng } = scene
-  const time = Date.now() * 0.001
   const frameSize = rng.int(25, 40)
   const offset = rng.int(30, 50)
 
@@ -451,8 +310,8 @@ function drawCornerFrames(ctx: CanvasRenderingContext2D, scene: CoverScene) {
   ]
 
   corners.forEach((c, i) => {
-    const pulse = 0.5 + Math.sin(time * 2 + i) * 0.3
-    ctx.strokeStyle = `rgba(103, 232, 249, ${0.35 + pulse * 0.35})`
+    const alpha = 0.42 + i * 0.08
+    ctx.strokeStyle = `rgba(103, 232, 249, ${alpha})`
     ctx.lineWidth = rng.range(1.5, 2.5)
 
     ctx.beginPath()
@@ -503,28 +362,4 @@ function renderTechBase(ctx: CanvasRenderingContext2D, scene: CoverScene) {
 // 静态渲染（用于下载）
 export function renderTechStyle(ctx: CanvasRenderingContext2D, scene: CoverScene) {
   renderTechBase(ctx, scene)
-}
-
-// 动态渲染（用于预览）
-export function renderTechStyleAnimated(ctx: CanvasRenderingContext2D, scene: CoverScene) {
-  const { rng } = scene
-
-  renderTechBase(ctx, scene)
-
-  // ===== Layer 3: 动态层（随机选 1-2 个）=====
-  const dynamicEffects = [
-    drawFlowingLines,
-    drawBreathingParticles,
-    drawAnimatedScanLines,
-    drawMatrixRain,
-    drawHexGrid,
-  ]
-
-  const dynamicCount = rng.int(1, 2)
-  const pickedDynamics = new Set<number>()
-  while (pickedDynamics.size < dynamicCount) {
-    pickedDynamics.add(rng.int(0, dynamicEffects.length - 1))
-  }
-
-  Array.from(pickedDynamics).forEach((i) => dynamicEffects[i]?.(ctx, scene))
 }

@@ -29,7 +29,7 @@ export function HistoryPanel({ items, onReplay, onClear }: HistoryPanelProps) {
               <span className="history-item__style">
                 {THEMES[item.style].label} · 第 {item.variant ?? items.length - index} 版
               </span>
-              <strong>{item.title}</strong>
+              <strong>{item.title || '未命名头图'}</strong>
               <span className="history-item__meta">Seed {item.seed}</span>
               <span>{new Date(item.createdAt).toLocaleString()}</span>
             </button>

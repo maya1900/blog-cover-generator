@@ -21,7 +21,6 @@ function App() {
 
   const handleGenerate = () => {
     const normalized = title.trim()
-    if (!normalized) return
 
     const nextVariant = variant + 1
     setVariant(nextVariant)
@@ -91,7 +90,7 @@ function App() {
             onGenerate={handleGenerate}
           />
           <div className="tool-row">
-            <span className="seed-hint">输出尺寸 1200 × 630，支持 JPG / PNG / WebP 三种格式</span>
+            <span className="seed-hint">输出尺寸 1200 × 630，支持 JPG / PNG / WebP 静态图导出与复制</span>
           </div>
           <CoverPreview options={currentOptions} renderInfo={renderInfo} onRendered={handleRendered} />
         </div>
