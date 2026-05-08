@@ -78,6 +78,8 @@ npm run preview
 
 将 `Source` 设为 `GitHub Actions`。
 
+如果这里还没启用过 Pages，第一次必须手动开一次；不然工作流里的 `configure-pages` 会直接报 `Get Pages site failed / Not Found`。
+
 ### 3. 触发部署
 
 只要代码推到默认分支，工作流 `.github/workflows/deploy-pages.yml` 就会自动执行。
