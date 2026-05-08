@@ -60,6 +60,36 @@ npm run build
 npm run preview
 ```
 
+## 部署到 GitHub Pages
+
+这个项目已经补好了 `GitHub Pages` 部署工作流，推送到默认分支（当前兼容 `master` / `main`）就会自动构建并发布静态页面。
+
+### 1. 推送仓库到 GitHub
+
+确保仓库已经在 GitHub 上，并使用仓库当前的默认分支。
+
+### 2. 打开 Pages
+
+进入仓库设置：
+
+- `Settings`
+- `Pages`
+- `Build and deployment`
+
+将 `Source` 设为 `GitHub Actions`。
+
+### 3. 触发部署
+
+只要代码推到默认分支，工作流 `.github/workflows/deploy-pages.yml` 就会自动执行。
+
+部署完成后，页面地址通常是：
+
+```text
+https://<你的 GitHub 用户名>.github.io/<仓库名>/
+```
+
+这里已经处理了仓库子路径的 `base`，不用你再手搓那堆容易翻车的破配置。
+
 ## 校验命令
 
 ```bash
